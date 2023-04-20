@@ -17,17 +17,17 @@ typedef struct MCResult {
 
 template<int N>
 class Ising {
-using Grid =  std::bitset<N * N>;
+using Grid = signed char[N * N];
 public:
     explicit Ising(unsigned int seed);
     int compute_energy();
     int compute_magnetization();
     void thermalize(double beta);
     MCResult mc_sweep(double beta);
-    void draw();
+    void draw(std::basic_ostream<char>& out);
 
 private:
-    Grid grid;
+    Grid grid{};
     std::minstd_rand gen;
     std::uniform_real_distribution<double> dist;
     void sweep(const double* exps);

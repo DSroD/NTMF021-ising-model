@@ -1,6 +1,7 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <cstring>
 #include "ising.h"
 #include "ising.cpp"
 
@@ -15,6 +16,7 @@ typedef struct IsingResult {
 
 template<int N>
 void generate_result(IsingResult* results) {
+    #pragma omp parallel for
     for (int t_step = 0; t_step < T_STEPS; t_step++) {
         double t = (T_MAX - T_MIN) / (T_STEPS - 1) * t_step + T_MIN;
         double beta = 1.0 / t;
@@ -54,13 +56,14 @@ typedef struct MenuItem {
     ResCaller caller;
 } MenuItem;
 
-#define IMENU_NUM_ITEMS 4
+#define IMENU_NUM_ITEMS 5
 #define GEN_RES_ROW(i) {#i, [](IsingResult* res) {generate_result<i>(res);}}
 static const MenuItem i_menu_items[] = {
         GEN_RES_ROW(16),
         GEN_RES_ROW(32),
         GEN_RES_ROW(64),
         GEN_RES_ROW(128),
+        GEN_RES_ROW(256),
 };
 
 #define PMENU_NUM_ITEMS 2
@@ -91,11 +94,21 @@ unsigned char show_menu(const MenuItem* menu, const std::string& menu_title, uns
     return selection;
 }
 
-int main() {
+int main(int argc, char* argv[]) {
+    bool test_run = false;
+    unsigned char gs = 3;
+    for (int i = 0; i < argc; i++) {
+        if (strcmp(argv[i], "test") == 0) {
+            test_run = true;
+        }
+    }
     IsingResult isingResult[T_STEPS];
-    unsigned char gs = show_menu(i_menu_items, "Select grid size.", IMENU_NUM_ITEMS);
+    if (!test_run)
+        gs = show_menu(i_menu_items, "Select grid size.", IMENU_NUM_ITEMS);
     (i_menu_items[gs].caller)(isingResult);
-    unsigned char ps = show_menu(p_menu_items, "What should be done with results", PMENU_NUM_ITEMS);
-    (p_menu_items[ps].caller)(isingResult);
+    if (!test_run) {
+        unsigned char ps = show_menu(p_menu_items, "What should be done with results", PMENU_NUM_ITEMS);
+        (p_menu_items[ps].caller)(isingResult);
+    }
     return 0;
 }

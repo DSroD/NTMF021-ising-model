@@ -1,5 +1,5 @@
 CC = g++
-CFLAGS = -Wall -O3 -std=c++17
+CFLAGS = -Wall -O3 -std=c++17 -fopenmp
 OUT = ising
 graph ?= ising
 build:
