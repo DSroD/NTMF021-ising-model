@@ -4,10 +4,14 @@
 #include <bitset>
 #include <random>
 
-
+// Number of steps for thermalization
 #define THERMALIZE_SWEEP_COUNT 100
+// Number of steps for MC averaging
 #define MC_SWEEP_COUNT 3000
 
+/**
+ * Result of the MC simulation of one system
+ */
 typedef struct MCResult {
     double energy;
     double magnetisation;
@@ -32,7 +36,6 @@ private:
     std::uniform_real_distribution<double> dist;
     void sweep(const double* exps);
     bool metropolisAccept(signed char energy_delta_index, const double* exps);
-    signed char compute_energy_change_index(int x, int y);
     void precompute_exp(double beta, double* exps);
 };
 

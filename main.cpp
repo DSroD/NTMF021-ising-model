@@ -2,6 +2,7 @@
 #include <iostream>
 #include <fstream>
 #include <cstring>
+#include <omp.h>
 #include "ising.h"
 #include "ising.cpp"
 
@@ -20,14 +21,23 @@ void generate_result(IsingResult* results) {
     for (int t_step = 0; t_step < T_STEPS; t_step++) {
         double t = (T_MAX - T_MIN) / (T_STEPS - 1) * t_step + T_MIN;
         double beta = 1.0 / t;
-        auto i = new Ising<N>(time(nullptr));
+        // XOR the seed with thread num so each thread uses different seed
+        auto i = new Ising<N>(int(time(nullptr)) ^ omp_get_thread_num());
+        // Thermalize the system
         i->thermalize(beta);
+        // Perform sweeps to compute results
         MCResult res = i->mc_sweep(beta);
         results[t_step] = {res, t};
         delete i;
     }
 }
 
+/**
+ * Put results into output stream
+ * (expecting results is T_STEPS long)
+ * @param stream Output stream
+ * @param results Array with results
+ */
 void stream_results_csv(std::basic_ostream<char>& stream, IsingResult* results) {
     stream << "temperature,energy,magnetisation,susceptibility,specific_heat" << std::endl;
     for (int row = 0; row < T_STEPS; row++) {
@@ -79,7 +89,7 @@ static const MenuItem p_menu_items[] = {
         }}
 };
 
-unsigned char show_menu(const MenuItem* menu, const std::string& menu_title, unsigned int menu_length, bool printSel = true) {
+unsigned char show_menu(const MenuItem* menu, const std::string& menu_title, unsigned int menu_length) {
     unsigned int selection;
     std::cout << menu_title << std::endl;
     for (unsigned int ln = 0; ln < menu_length; ln++) {
@@ -89,7 +99,7 @@ unsigned char show_menu(const MenuItem* menu, const std::string& menu_title, uns
     std::cout << std::endl;
     if (selection < 0 || selection >= menu_length) {
         std::cout << "Wrong selection!" << std::endl;
-        return show_menu(menu, menu_title, menu_length, true);
+        return show_menu(menu, menu_title, menu_length);
     }
     return selection;
 }
